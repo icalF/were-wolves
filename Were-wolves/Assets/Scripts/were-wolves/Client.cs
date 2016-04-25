@@ -10,7 +10,7 @@ namespace WereWolves
     {
         private int player_id;
         private int is_alive;
-        private ? address;
+        //private ? address;
         private short port;
         private string username;
 

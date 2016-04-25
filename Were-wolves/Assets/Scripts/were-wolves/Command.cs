@@ -13,7 +13,6 @@ namespace WereWolves
         private int player_id;
         private string status;
         private string description;
-        private string method;
         private string vote_status;
         private string vote_result;
         private Client[] clients;
