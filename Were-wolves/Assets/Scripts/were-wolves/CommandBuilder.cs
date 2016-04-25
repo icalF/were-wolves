@@ -83,26 +83,26 @@ namespace WereWolves
         }
 
         // Change phase
-        public CommandBuilder change (string time, string desc, int days)
+        public CommandBuilder change (bool night, string desc, int days)
         {
             if (command.Count > 1) 
                 Clear();
 
             command.Add("method", "change_phase");
-            command.Add("time", time);
+            command.Add("time", night ? "night" : "day");
             command.Add("days", days);
             command.Add("description", desc);
             return this;
         }
 
         // Start game
-        public CommandBuilder start (string time, string desc, string role, object friends)
+        public CommandBuilder start (bool night, string desc, string role, object friends)
         {
             if (command.Count > 1) 
                 Clear();
 
             command.Add("method", "start");
-            command.Add("time", time);
+            command.Add("time", night ? "night" : "day");
             command.Add("role", role);
             command.Add("description", desc);
 
@@ -207,9 +207,10 @@ namespace WereWolves
             if (command.Count > 1) 
                 Clear();
 
-            command.Add("method", "vote_result_civilian");
-            command.Add("vote_status", id > 0 ? 1 : -1);
-            if (id > 0)
+            bool valid = id > 0;
+            command.Add("method", "vote_result" + (valid ? "_civilian" : ""));
+            command.Add("vote_status", valid ? 1 : -1);
+            if (valid)
                 command.Add("player_id", id);
             command.Add("vote_result", res);
             return this;
@@ -221,9 +222,10 @@ namespace WereWolves
             if (command.Count > 1) 
                 Clear();
 
-            command.Add("method", "vote_result_werewolf");
-            command.Add("vote_status", id > 0 ? 1 : -1);
-            if (id > 0)
+            bool valid = id > 0;
+            command.Add("method", "vote_result" + (valid ? "_werewolf" : ""));
+            command.Add("vote_status", valid ? 1 : -1);
+            if (valid)
                 command.Add("player_id", id);
             command.Add("vote_result", res);
             return this;

@@ -40,18 +40,15 @@ namespace WereWolves.Tests
             string expectedResult = "{\"method\":\"join\",\"username\":\"Gazandi\"}";
             Assert.That(expectedResult, Is.EqualTo(result));
         }
-        //[Test]
-        //public void joinRespTest(int status, object desc)
-        //{
-        //    if (command.Count > 1)
-        //        Clear();
-
-        //    command.Add("status", status > 0 ? "fail" : status != 0 ? "error" : "ok");
-        //    if (status == 0)
-        //        command.Add("player_id", desc);
-        //    else
-        //        command.Add("description", desc);
-        //}
+        // Join response
+        [Test]
+        public void joinRespTest()
+        {
+            CommandBuilder sut = new CommandBuilder();
+            string result = sut.joinResp(-1, "Gazandi").build();
+            string expectedResult = "{\"status\":\"error\",\"description\":\"Gazandi\"}";
+            Assert.That(expectedResult, Is.EqualTo(result));
+        }
 
         // Leave game
         [Test]
@@ -63,7 +60,7 @@ namespace WereWolves.Tests
             Assert.That(expectedResult, Is.EqualTo(result));
         }
 
-        //// Ready game
+        // Ready game
         [Test]
         public void readyTest()
         {
@@ -73,46 +70,35 @@ namespace WereWolves.Tests
             Assert.That(expectedResult, Is.EqualTo(result));
         }
 
-        //// Game over
-        //[Test]
-        //public void overTest(string winner, string desc)
-        //{
-        //    if (command.Count > 1)
-        //        Clear();
+        // game over
+        [Test]
+        public void overTest()
+        {
+            CommandBuilder sut = new CommandBuilder();
+            string result = sut.over("Panjadi", "game_over").build();
+            string expectedResult = "{\"method\":\"game_over\",\"winner\":\"Panjadi\",\"description\":\"game_over\"}";
+            Assert.That(expectedResult, Is.EqualTo(result));
+        }
 
-        //    command.Add("method", "game_over");
-        //    command.Add("winner", winner);
-        //    command.Add("description", desc);
-        //}
+        // Change phase
+        [Test]
+        public void changeTest()
+        {
+            CommandBuilder sut = new CommandBuilder();
+            string result = sut.change(true, "change_phase", 2).build();
+            string expectedResult = "{\"method\":\"change_phase\",\"time\":\"night\",\"days\":2,\"description\":\"change_phase\"}";
+            Assert.That(expectedResult, Is.EqualTo(result));
+        }
 
-        //// Change phase
-        //[Test]
-        //public void changeTest(string time, string desc, int days)
-        //{
-        //    if (command.Count > 1)
-        //        Clear();
-
-        //    command.Add("method", "change_phase");
-        //    command.Add("time", time);
-        //    command.Add("days", days);
-        //    command.Add("description", desc);
-        //}
-
-        //// Start game
-        //[Test]
-        //public void startTest(string time, string desc, string role, object friends)
-        //{
-        //    if (command.Count > 1)
-        //        Clear();
-
-        //    command.Add("method", "start");
-        //    command.Add("time", time);
-        //    command.Add("role", role);
-        //    command.Add("description", desc);
-
-        //    if (friends != null)
-        //        command.Add("friend", friends);
-        //}
+        // Start game
+        [Test]
+        public void startTest()
+        {
+            CommandBuilder sut = new CommandBuilder();
+            string result = sut.start(false, "game is started", "werewolf", new string[]{"ahmad", "dariel"} ).build();
+            string expectedResult = "{\"method\":\"start\",\"time\":\"day\",\"role\":\"werewolf\",\"description\":\"game is started\",\"friend\":[\"ahmad\",\"dariel\"]}";
+            Assert.That(expectedResult, Is.EqualTo(result));
+        }
 
         // Player list 
         [Test]
@@ -124,17 +110,16 @@ namespace WereWolves.Tests
             Assert.That(expectedResult, Is.EqualTo(result));
         }
         //[Test]
-        //public void listClientRespTest(int status, string desc, object clientList)
-        //{
-        //    if (command.Count > 1)
-        //        Clear();
-
-        //    command.Add("status", status > 0 ? "fail" : status != 0 ? "error" : "ok");
-        //    command.Add("description", desc);
-
-        //    if (clientList != null)
-        //        command.Add("clients", clientList);
-        //}
+        public void listClientRespTest()
+        {
+            CommandBuilder sut = new CommandBuilder();
+            string result = sut.listClientResp(0, "Gazandi", new Client[] {
+                new Client("Panjadi", "10.1.5.254", 3333),
+                new Client("Panjadi2", "10.1.5.350", 6666)
+            }).build();
+            string expectedResult = "{\"status\":\"ok\",\"description\":\"Gazandi\",\"clients\":[{\"player_id\":0,\"is_alive\":1,\"address\":\"10.1.5.254\",\"port\":3333,\"username\":\"Panjadi\"},{\"player_id\":1,\"is_alive\":1,\"address\":\"10.1.5.350\",\"port\":6666,\"username\":\"Panjadi2\"}]}";
+            Assert.That(expectedResult, Is.EqualTo(result));
+        }
 
         // Kill civilian 
         [Test]
@@ -165,16 +150,14 @@ namespace WereWolves.Tests
             string expectedResult = "{\"method\":\"prepare_proposal\",\"kpu_id\":1,\"proposal_id\":(1,1)}";
             Assert.That(expectedResult, Is.EqualTo(result));
         }
-        //[Test]
-        //public void proposeRespTest(int status, string desc, int prev)
-        //{
-        //    if (command.Count > 1)
-        //        Clear();
-
-        //    command.Add("status", status > 0 ? "fail" : status != 0 ? "error" : "ok");
-        //    command.Add("description", desc);
-        //    command.Add("previous_accepted", prev);
-        //}
+        [Test]
+        public void proposeRespTest()
+        {
+            CommandBuilder sut = new CommandBuilder();
+            string result = sut.proposeResp(0, "Gazandi", 3).build();
+            string expectedResult = "{\"status\":\"ok\",\"description\":\"Gazandi\",\"previous_accepted\":3}";
+            Assert.That(expectedResult, Is.EqualTo(result));
+        }
 
         // Paxos accept proposal
         [Test]
@@ -196,32 +179,32 @@ namespace WereWolves.Tests
             Assert.That(expectedResult, Is.EqualTo(result));
         }
 
-        //// Kill civilian result
-        //[Test]
-        //public void killCivResTest(int id, object res)
-        //{
-        //    if (command.Count > 1)
-        //        Clear();
+        // Kill civilian result
+        [Test]
+        public void killCivResTest()
+        {
+            CommandBuilder sut = new CommandBuilder();
+            Tuple[] res = {
+                new Tuple(0,1),
+                new Tuple(1,2)
+            };
+            string result = sut.killCivRes(1, res).build();
+            string expectedResult = "{\"method\":\"vote_result_civilian\",\"vote_status\":1,\"player_id\":1,\"vote_result\":[(0,1),(1,2)]}";
+            Assert.That(expectedResult, Is.EqualTo(result));
+        }
 
-        //    command.Add("method", "vote_result_civilian");
-        //    command.Add("vote_status", id > 0 ? 1 : -1);
-        //    if (id > 0)
-        //        command.Add("player_id", id);
-        //    command.Add("vote_result", res);
-        //}
-
-        //// Kill werewolf result
-        //[Test]
-        //public void killWereResTest(int id, object res)
-        //{
-        //    if (command.Count > 1)
-        //        Clear();
-
-        //    command.Add("method", "vote_result_werewolf");
-        //    command.Add("vote_status", id > 0 ? 1 : -1);
-        //    if (id > 0)
-        //        command.Add("player_id", id);
-        //    command.Add("vote_result", res);
-        //}
+        // Kill werewolf result
+        [Test]
+        public void killWereResTest()
+        {
+            CommandBuilder sut = new CommandBuilder();
+            Tuple[] res = {
+                new Tuple(0,1),
+                new Tuple(1,2)
+            };
+            string result = sut.killWereRes(-1, res).build();
+            string expectedResult = "{\"method\":\"vote_result\",\"vote_status\":-1,\"vote_result\":[(0,1),(1,2)]}";
+            Assert.That(expectedResult, Is.EqualTo(result));
+        }
     }
 }

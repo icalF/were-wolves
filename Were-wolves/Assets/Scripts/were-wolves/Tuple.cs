@@ -8,7 +8,7 @@ namespace WereWolves
     {
         public int First { get; private set; }
         public int Second { get; private set; }
-        internal Tuple(int first, int second)
+        public Tuple(int first, int second)
         {
             First = first;
             Second = second;
@@ -20,16 +20,14 @@ namespace WereWolves
         public override void WriteJson(JsonWriter writer, object value, JsonSerializer serializer)
         {
             var tuple = value as Tuple;
-            writer.WriteRaw("(");
-            serializer.Serialize(writer, tuple.First);
-            serializer.Serialize(writer, tuple.Second);
-            writer.WriteRaw(")");
+            writer.WriteRawValue("(" + tuple.First + "," + tuple.Second + ")");
             //throw new NotImplementedException();
         }
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            throw new NotImplementedException();
+            //throw new NotImplementedException();
+            return null;
         }
 
         public override bool CanConvert(Type objectType)

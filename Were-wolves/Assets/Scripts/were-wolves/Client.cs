@@ -1,15 +1,22 @@
 namespace WereWolves
 {
-    class Client
+    public class Client
     {
-        private int player_id;
-        private int is_alive;
-        //private ? address;
+        private bool is_alive;
+        private string address;
         private short port;
         private string username;
 
         // constructor
-        // getter
+        public Client(string username, string address, short port)
+        {
+            this.username = username;
+            this.address = address;
+            this.port = port;
+            is_alive = true;
+        }
+
         // setter
+        public void killed() { is_alive = false; }
     }
 }
