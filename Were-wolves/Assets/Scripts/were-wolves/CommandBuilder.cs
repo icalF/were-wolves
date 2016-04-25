@@ -1,5 +1,4 @@
 ﻿using Newtonsoft.Json;
-using System;
 using System.Collections.Generic;
 
 namespace WereWolves
@@ -25,20 +24,20 @@ namespace WereWolves
 
             if (desc != null)
                 command.Add("description", desc);
-
             return this;
         }
 
         // Join game
-        public void join (string username)
+        public CommandBuilder join (string username)
         {
             if (command.Count > 1) 
                 Clear();
 
             command.Add("method", "join");
             command.Add("username", username);
+            return this;
         }
-        public void joinResp (int status, object desc)
+        public CommandBuilder joinResp (int status, object desc)
         {
             if (command.Count > 1) 
                 Clear();
@@ -48,28 +47,31 @@ namespace WereWolves
                 command.Add("player_id", desc);
             else
                 command.Add("description", desc);
+            return this;
         }
 
         // Leave game
-        public void leave ()
+        public CommandBuilder leave ()
         {
             if (command.Count > 1) 
                 Clear();
 
             command.Add("method", "leave");
+            return this;
         }
 
         // Ready game
-        public void ready ()
+        public CommandBuilder ready ()
         {
             if (command.Count > 1) 
                 Clear();
 
             command.Add("method", "ready");
+            return this;
         }
 
         // Game over
-        public void over (string winner, string desc)
+        public CommandBuilder over (string winner, string desc)
         {
             if (command.Count > 1) 
                 Clear();
@@ -77,10 +79,11 @@ namespace WereWolves
             command.Add("method", "game_over");
             command.Add("winner", winner);
             command.Add("description", desc);
+            return this;
         }
 
         // Change phase
-        public void change (string time, string desc, int days)
+        public CommandBuilder change (string time, string desc, int days)
         {
             if (command.Count > 1) 
                 Clear();
@@ -89,10 +92,11 @@ namespace WereWolves
             command.Add("time", time);
             command.Add("days", days);
             command.Add("description", desc);
+            return this;
         }
 
         // Start game
-        public void start (string time, string desc, string role, object friends)
+        public CommandBuilder start (string time, string desc, string role, object friends)
         {
             if (command.Count > 1) 
                 Clear();
@@ -104,17 +108,19 @@ namespace WereWolves
 
             if (friends != null)
               command.Add("friend", friends);
+            return this;
         }
 
         // Player list 
-        public void listClient ()
+        public CommandBuilder listClient ()
         {
             if (command.Count > 1) 
                 Clear();
 
             command.Add("method", "client_address");
+            return this;
         }
-        public void listClientResp (int status, string desc, object clientList)
+        public CommandBuilder listClientResp (int status, string desc, object clientList)
         {
             if (command.Count > 1) 
                 Clear();
@@ -124,39 +130,43 @@ namespace WereWolves
 
             if (clientList != null)
               command.Add("clients", clientList);
+            return this;
         }
 
         // Kill civilian 
-        public void killCiv (int id)
+        public CommandBuilder killCiv (int id)
         {
             if (command.Count > 1) 
                 Clear();
 
             command.Add("method", "vote_civilian");
             command.Add("player_id", id);
+            return this;
         }
 
         // Kill werewolf 
-        public void killWere (int id)
+        public CommandBuilder killWere (int id)
         {
             if (command.Count > 1) 
                 Clear();
 
             command.Add("method", "vote_werewolf");
             command.Add("player_id", id);
+            return this;
         }
 
         // Paxos prepare proposal
-        public void propose (int kpu, int id)
+        public CommandBuilder propose (int kpu, int id)
         {
             if (command.Count > 1) 
                 Clear();
 
             command.Add("method", "prepare_proposal");
             command.Add("kpu_id", kpu);
-            command.Add("proposal_id", new Tuple<int, int>(1, id));
+            command.Add("proposal_id", new Tuple(1, id));
+            return this;
         }
-        public void proposeResp (int status, string desc, int prev)
+        public CommandBuilder proposeResp (int status, string desc, int prev)
         {
             if (command.Count > 1) 
                 Clear();
@@ -164,21 +174,23 @@ namespace WereWolves
             command.Add("status", status > 0 ? "fail" : status != 0 ? "error" : "ok");
             command.Add("description", desc);
             command.Add("previous_accepted", prev);
+            return this;
         }
 
         // Paxos accept proposal
-        public void accept (int kpu, int id)
+        public CommandBuilder accept (int kpu, int id)
         {
             if (command.Count > 1) 
                 Clear();
 
             command.Add("method", "accept_proposal");
             command.Add("kpu_id", kpu);
-            command.Add("proposal_id", new Tuple<int, int>(1, id));
+            command.Add("proposal_id", new Tuple(1, id));
+            return this;
         }
 
         // Client accept proposal
-        public void clientAccept (int id)
+        public CommandBuilder clientAccept (int id)
         {
             if (command.Count > 1) 
                 Clear();
@@ -186,10 +198,11 @@ namespace WereWolves
             command.Add("method", "prepare_proposal");
             command.Add("kpu_id", id);
             command.Add("Description", "Kpu is selected");
+            return this;
         }
 
         // Kill civilian result
-        public void killCivRes (int id, object res)
+        public CommandBuilder killCivRes (int id, object res)
         {
             if (command.Count > 1) 
                 Clear();
@@ -199,10 +212,11 @@ namespace WereWolves
             if (id > 0)
                 command.Add("player_id", id);
             command.Add("vote_result", res);
+            return this;
         }
 
         // Kill werewolf result
-        public void killWereRes (int id, object res)
+        public CommandBuilder killWereRes (int id, object res)
         {
             if (command.Count > 1) 
                 Clear();
@@ -212,6 +226,7 @@ namespace WereWolves
             if (id > 0)
                 command.Add("player_id", id);
             command.Add("vote_result", res);
+            return this;
         }
 
         public string build()
