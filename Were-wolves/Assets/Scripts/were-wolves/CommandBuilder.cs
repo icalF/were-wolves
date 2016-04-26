@@ -17,7 +17,7 @@ namespace WereWolves
         // General response
         public CommandBuilder response (int status, string desc)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("status", status > 0 ? "fail" : status != 0 ? "error" : "ok");
@@ -30,7 +30,7 @@ namespace WereWolves
         // Join game
         public CommandBuilder join (string username)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "join");
@@ -39,7 +39,7 @@ namespace WereWolves
         }
         public CommandBuilder joinResp (int status, object desc)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("status", status > 0 ? "fail" : status != 0 ? "error" : "ok");
@@ -53,7 +53,7 @@ namespace WereWolves
         // Leave game
         public CommandBuilder leave ()
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "leave");
@@ -63,7 +63,7 @@ namespace WereWolves
         // Ready game
         public CommandBuilder ready ()
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "ready");
@@ -73,7 +73,7 @@ namespace WereWolves
         // Game over
         public CommandBuilder over (string winner, string desc)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "game_over");
@@ -85,7 +85,7 @@ namespace WereWolves
         // Change phase
         public CommandBuilder change (bool night, string desc, int days)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "change_phase");
@@ -98,7 +98,7 @@ namespace WereWolves
         // Start game
         public CommandBuilder start (bool night, string desc, string role, object friends)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "start");
@@ -114,7 +114,7 @@ namespace WereWolves
         // Player list 
         public CommandBuilder listClient ()
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "client_address");
@@ -122,7 +122,7 @@ namespace WereWolves
         }
         public CommandBuilder listClientResp (int status, string desc, object clientList)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("status", status > 0 ? "fail" : status != 0 ? "error" : "ok");
@@ -136,7 +136,7 @@ namespace WereWolves
         // Kill civilian 
         public CommandBuilder killCiv (int id)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "vote_civilian");
@@ -147,7 +147,7 @@ namespace WereWolves
         // Kill werewolf 
         public CommandBuilder killWere (int id)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "vote_werewolf");
@@ -158,7 +158,7 @@ namespace WereWolves
         // Paxos prepare proposal
         public CommandBuilder propose (int kpu, int id)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "prepare_proposal");
@@ -168,7 +168,7 @@ namespace WereWolves
         }
         public CommandBuilder proposeResp (int status, string desc, int prev)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("status", status > 0 ? "fail" : status != 0 ? "error" : "ok");
@@ -180,7 +180,7 @@ namespace WereWolves
         // Paxos accept proposal
         public CommandBuilder accept (int kpu, int id)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "accept_proposal");
@@ -192,7 +192,7 @@ namespace WereWolves
         // Client accept proposal
         public CommandBuilder clientAccept (int id)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "prepare_proposal");
@@ -204,7 +204,7 @@ namespace WereWolves
         // Kill civilian result
         public CommandBuilder killCivRes (int id, object res)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             bool valid = id > 0;
@@ -219,7 +219,7 @@ namespace WereWolves
         // Kill werewolf result
         public CommandBuilder killWereRes (int id, object res)
         {
-            if (command.Count > 1) 
+            if (command.Count > 0) 
                 Clear();
 
             bool valid = id > 0;

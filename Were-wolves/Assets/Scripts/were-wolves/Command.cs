@@ -9,7 +9,7 @@ namespace WereWolves
         private string description;
         private string vote_status;
         private string vote_result;
-        private Client[] clients;
+        private ClientData[] clients;
         private int proposal_id;
 
         public Command ()
