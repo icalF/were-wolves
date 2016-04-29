@@ -9,7 +9,7 @@ namespace WereWolves
         public int First { get; private set; }
         public int Second { get; private set; }
         public Tuple(int first, int second) { First = first; Second = second; }
-        public override bool Equals(System.Object obj)
+        public override bool Equals(object obj)
         {
             if (obj == null)
             {

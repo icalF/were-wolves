@@ -1,24 +1,25 @@
 using System;
 using Newtonsoft.Json;
+using System.Collections.Generic;
 
 namespace WereWolves
 {
     [JsonConverter(typeof(ClientSerializer))]
-    public class ClientData
+    public class ClientData : object
     {
         static int globalId = 0;
 
-        int id;
-        bool is_alive;
-        string address;
-        short port;
-        string username;
-        bool is_werewolf;
+        public int player_id { get; set; }
+        public bool is_alive { get; set; }
+        public string address { get; set; }
+        public short port { get; set; }
+        public string username { get; set; }
+        public bool is_werewolf { get; set; } = false;
 
         // constructor
         public ClientData(string username, string address, short port, bool is_werewolf = false)
         {
-            id = globalId;
+            player_id = globalId;
             globalId++;
 
             this.username = username;
@@ -29,7 +30,7 @@ namespace WereWolves
         }
 
         // getter
-        public int getId() { return id; }
+        public int getId() { return player_id; }
         public string getAddress() { return address; }
         public string getUsername() { return username; }
         public short getPort() { return port; }
@@ -39,6 +40,36 @@ namespace WereWolves
         // setter
         public void killed() { is_alive = false; }
         public void setRole(bool is_werewolf) { this.is_werewolf = is_werewolf; }
+
+        public override bool Equals(object obj)
+        {
+            if (obj == null)
+            {
+                return false;
+            }
+
+            ClientData p = obj as ClientData;
+            if (p == null)
+            {
+                return false;
+            }
+
+            return Equals(p);
+        }
+
+        public bool Equals(ClientData p)
+        {
+            if (p == null)
+            {
+                return false;
+            }
+
+            return (getUsername() == p.getUsername()) 
+                && (getAddress() == p.getAddress())
+                && (getPort() == p.getPort())
+                && (isAlive() == p.isAlive())
+                && (isWerewolf() == p.isWerewolf());
+        }
     }
 
     public class ClientSerializer : JsonConverter
@@ -75,10 +106,18 @@ namespace WereWolves
 
         public override object ReadJson(JsonReader reader, Type objectType, object existingValue, JsonSerializer serializer)
         {
-            if (reader.TokenType == JsonToken.StartArray)
+            if (reader.TokenType == JsonToken.StartObject)
             {
-                int[] arr = serializer.Deserialize<int[]>(reader);
-                return new Tuple(arr[0], arr[1]);
+                var dict = serializer.Deserialize<Dictionary<string, string>>(reader);
+                var cl = new ClientData(
+                    dict["username"],
+                    dict["address"],
+                    Convert.ToInt16(dict["port"])
+                );
+                if (dict.ContainsKey("is_werewolf"))
+                    cl.setRole(dict["is_werewolf"].Equals("werewolf"));
+
+                return cl;
             }
             else
             {

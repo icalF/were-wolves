@@ -30,20 +30,16 @@ namespace WereWolves
 
         ~Client()
         {
-            tcpClient.Dispose();
             tcpClient.Close();
-
-            udpClient.Dispose();
             udpClient.Close();
         }
 
         public void setServer(string host, short port)
         {
             // clean resources used by socket up
-            tcpClient.Dispose();
             tcpClient.Close();              
 
-            tcpClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0);
+            tcpClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             tcpClient.Connect(host, port);
             localIP = (tcpClient.LocalEndPoint as IPEndPoint).Address.ToString();
         }
@@ -51,12 +47,7 @@ namespace WereWolves
         public void sendToServer(string command)
         {
             byte[] data = Encoding.ASCII.GetBytes(command);
-
             tcpClient.Send(data);
-            Console.WriteLine("Sent: {0}", command);
-
-            data = new byte[256];
-            string responseData = string.Empty;
         }
 
         public void sendToPeer(int id, string command)
@@ -74,7 +65,9 @@ namespace WereWolves
             udpClient.Send(sendBytes, sendBytes.Length);
         }
 
-        public void join(string username, string address, short port) { sendToServer(builder.join(username, address, port).build()); }
+        public void join(string username) {
+            sendToServer(builder.join(username, localIP, listenPort).build());
+        }
 
         public void leave() { sendToServer(builder.leave().build()); }
 
