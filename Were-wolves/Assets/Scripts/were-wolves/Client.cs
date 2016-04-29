@@ -30,17 +30,17 @@ namespace WereWolves
 
         ~Client()
         {
-            tcpClient.Dispose();
+            //tcpClient.Dispose();
             tcpClient.Close();
 
-            udpClient.Dispose();
+            //udpClient.Dispose();
             udpClient.Close();
         }
 
         public void setServer(string host, short port)
         {
             // clean resources used by socket up
-            tcpClient.Dispose();
+            //tcpClient.Dispose();
             tcpClient.Close();              
 
             tcpClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0);
