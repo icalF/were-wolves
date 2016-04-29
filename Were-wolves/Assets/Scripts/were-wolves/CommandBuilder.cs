@@ -28,13 +28,15 @@ namespace WereWolves
         }
 
         // Join game
-        public CommandBuilder join (string username)
+        public CommandBuilder join (string username, string address, short port)
         {
             if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "join");
             command.Add("username", username);
+            command.Add("udp_address", address);
+            command.Add("udp_port", port);
             return this;
         }
         public CommandBuilder joinResp (int status, object desc)

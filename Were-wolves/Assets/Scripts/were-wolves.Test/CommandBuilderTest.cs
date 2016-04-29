@@ -40,8 +40,8 @@ namespace WereWolves.Tests
         [Test]
         public void joinTest()
         {
-            string result = sut.join("Gazandi").build();
-            string expectedResult = "{\"method\":\"join\",\"username\":\"Gazandi\"}";
+            string result = sut.join("Gazandi", "127.0.0.1", 9999).build();
+            string expectedResult = "{\"method\":\"join\",\"username\":\"Gazandi\",\"udp_address\":\"127.0.0.1\",\"udp_port\":9999}";
             Assert.That(result, Is.EqualTo(expectedResult));
         }
         // Join response
@@ -106,14 +106,17 @@ namespace WereWolves.Tests
             string expectedResult = "{\"method\":\"client_address\"}";
             Assert.That(result, Is.EqualTo(expectedResult));
         }
-        //[Test]
+        [Test]
         public void listClientRespTest()
         {
-            string result = sut.listClientResp(0, "Gazandi", new ClientData[] {
+            var clients = new ClientData[] {
                 new ClientData("Panjadi", "10.1.5.254", 3333),
                 new ClientData("Panjadi2", "10.1.5.350", 6666)
-            }).build();
-            string expectedResult = "{\"status\":\"ok\",\"description\":\"Gazandi\",\"clients\":[{\"player_id\":0,\"is_alive\":1,\"address\":\"10.1.5.254\",\"port\":3333,\"username\":\"Panjadi\"},{\"player_id\":1,\"is_alive\":1,\"address\":\"10.1.5.350\",\"port\":6666,\"username\":\"Panjadi2\"}]}";
+            };
+            clients[1].killed();
+            clients[1].setRole(true);
+            string result = sut.listClientResp(0, "Gazandi", clients).build();
+            string expectedResult = "{\"status\":\"ok\",\"description\":\"Gazandi\",\"clients\":[{\"player_id\":0,\"is_alive\":1,\"address\":\"10.1.5.254\",\"port\":3333,\"username\":\"Panjadi\"},{\"player_id\":1,\"is_alive\":0,\"address\":\"10.1.5.350\",\"port\":6666,\"username\":\"Panjadi2\",\"role\":\"werewolf\"}]}";
             Assert.That(result, Is.EqualTo(expectedResult));
         }
 

@@ -5,7 +5,7 @@ using System.Text;
 
 namespace WereWolves
 {
-    class Client
+    public class Client
     {
         short listenPort = 8282;
 
@@ -14,6 +14,7 @@ namespace WereWolves
         CommandBuilder builder;
         ClientData[] clients;
         string localIP;
+        public string receivedString;
         short kpuId;
 
         public Client(short port)
@@ -25,6 +26,15 @@ namespace WereWolves
             udpClient.BeginReceive(new AsyncCallback(ReceiveCallback), sta);
 
             builder = new CommandBuilder();
+        }
+
+        ~Client()
+        {
+            tcpClient.Dispose();
+            tcpClient.Close();
+
+            udpClient.Dispose();
+            udpClient.Close();
         }
 
         public void setServer(string host, short port)
@@ -52,14 +62,19 @@ namespace WereWolves
         public void sendToPeer(int id, string command)
         {
             ClientData peer = clients[id];
-            udpClient.Connect(peer.getAddress(), peer.getPort());
+            IPAddress ipAddress = Dns.GetHostEntry(peer.getAddress()).AddressList[0];
 
+            sendUdp(new IPEndPoint(ipAddress, peer.getPort()), command);
+        }
+
+        public void sendUdp(IPEndPoint remote, string command)
+        {
+            udpClient.Connect(remote);
             byte[] sendBytes = Encoding.ASCII.GetBytes(command);
-
             udpClient.Send(sendBytes, sendBytes.Length);
         }
 
-        public void join(string username) { sendToServer(builder.join(username).build()); }
+        public void join(string username, string address, short port) { sendToServer(builder.join(username, address, port).build()); }
 
         public void leave() { sendToServer(builder.leave().build()); }
 
@@ -82,15 +97,14 @@ namespace WereWolves
             sendToPeer(kpuId, command);
         }
 
-        public static void ReceiveCallback(IAsyncResult ar)
+        public void ReceiveCallback(IAsyncResult ar)
         {
             UdpClient u = ((UdpState)(ar.AsyncState)).u;
             IPEndPoint e = ((UdpState)(ar.AsyncState)).e;
 
             byte[] receiveBytes = u.EndReceive(ar, ref e);
-            string receiveString = Encoding.ASCII.GetString(receiveBytes);
-
-            Console.WriteLine("Received: {0}", receiveString);
+            receivedString = Encoding.ASCII.GetString(receiveBytes);
+            Console.WriteLine(receivedString);
         }
     }
 }
