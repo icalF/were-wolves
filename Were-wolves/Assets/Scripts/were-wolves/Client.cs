@@ -7,39 +7,46 @@ namespace WereWolves
 {
     class Client
     {
-        TcpClient tcpClient;
+        short listenPort = 8282;
+
+        Socket tcpClient;
         UdpClient udpClient;
         CommandBuilder builder;
         ClientData[] clients;
+        string localIP;
         short kpuId;
 
-        public Client() {}
+        public Client(short port)
+        {
+            listenPort = port;
+            IPEndPoint e = new IPEndPoint(IPAddress.Any, listenPort);
+            udpClient = new UdpClient(e);
+            UdpState sta = new UdpState(udpClient, e);
+            udpClient.BeginReceive(new AsyncCallback(ReceiveCallback), sta);
+
+            builder = new CommandBuilder();
+        }
 
         public void setServer(string host, short port)
         {
-            tcpClient = new TcpClient(host, port);
-            udpClient = new UdpClient();
-            builder = new CommandBuilder();
+            // clean resources used by socket up
+            tcpClient.Dispose();
+            tcpClient.Close();              
+
+            tcpClient = new Socket(AddressFamily.InterNetwork, SocketType.Dgram, 0);
+            tcpClient.Connect(host, port);
+            localIP = (tcpClient.LocalEndPoint as IPEndPoint).Address.ToString();
         }
 
         public void sendToServer(string command)
         {
-            Byte[] data = Encoding.ASCII.GetBytes(command);
+            byte[] data = Encoding.ASCII.GetBytes(command);
 
-            NetworkStream stream = tcpClient.GetStream();
-            stream.Write(data, 0, data.Length);
+            tcpClient.Send(data);
             Console.WriteLine("Sent: {0}", command);
 
-
-            data = new Byte[256];
-            String responseData = String.Empty;
-
-            int bytes = stream.Read(data, 0, data.Length);
-            responseData = Encoding.ASCII.GetString(data, 0, bytes);
-            Console.WriteLine("Received: {0}", responseData);
-
-            stream.Close();
-            tcpClient.Close();
+            data = new byte[256];
+            string responseData = string.Empty;
         }
 
         public void sendToPeer(int id, string command)
@@ -50,13 +57,6 @@ namespace WereWolves
             byte[] sendBytes = Encoding.ASCII.GetBytes(command);
 
             udpClient.Send(sendBytes, sendBytes.Length);
-
-            IPEndPoint RemoteIpEndPoint = new IPEndPoint(IPAddress.Any, 0);
-
-            byte[] receiveBytes = udpClient.Receive(ref RemoteIpEndPoint);
-            string returnData = Encoding.ASCII.GetString(receiveBytes);
-
-            udpClient.Close();
         }
 
         public void join(string username) { sendToServer(builder.join(username).build()); }
@@ -80,6 +80,17 @@ namespace WereWolves
                 builder.killCiv(id).build();
 
             sendToPeer(kpuId, command);
+        }
+
+        public static void ReceiveCallback(IAsyncResult ar)
+        {
+            UdpClient u = ((UdpState)(ar.AsyncState)).u;
+            IPEndPoint e = ((UdpState)(ar.AsyncState)).e;
+
+            byte[] receiveBytes = u.EndReceive(ar, ref e);
+            string receiveString = Encoding.ASCII.GetString(receiveBytes);
+
+            Console.WriteLine("Received: {0}", receiveString);
         }
     }
 }
