@@ -37,7 +37,7 @@ namespace WereWolves
         public void setServer(string host, short port)
         {
             // clean resources used by socket up
-            tcpClient.Close();              
+            //tcpClient.Close();              
 
             tcpClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             tcpClient.Connect(host, port);

@@ -8,12 +8,13 @@ namespace WereWolves.Tests
     public class NetworkTests
     {
         Client client1, client2;
-
+        Server server1;
         [TestFixtureSetUp]
         public void TestSetup()
         {
             client1 = new Client(8181);
             client2 = new Client(8383);
+            server1 = new Server();
         }
 
         [TestFixtureTearDown]
@@ -42,13 +43,17 @@ namespace WereWolves.Tests
         [Test]
         public void c2sTest()
         {
-            /*string s = "Aku cinta kamu";
-            IPEndPoint e = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8383);
-            client1.sendUdp(e, s);
+            string s = "Aku cinta kamu";
+            //IPEndPoint e = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8383);
+            client1.setServer((server1.ipep as IPEndPoint).Address.ToString(), 8282);
+            client1.sendToServer(s);
             Thread.Sleep(1000);
-            string r = client2.receivedString;
+            string r = server1.receivedString;
 
-            Assert.That(s, Is.EqualTo(r));*/
+            Thread.Sleep(1000);
+            string t = client1.receivedString;
+            //Assert.That(null,r);
+            Assert.That(t, Is.EqualTo(r));
         }
 
         [Test]

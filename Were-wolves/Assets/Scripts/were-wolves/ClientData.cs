@@ -14,7 +14,7 @@ namespace WereWolves
         public string address { get; set; }
         public short port { get; set; }
         public string username { get; set; }
-        public bool is_werewolf { get; set; } = false;
+        public bool is_werewolf { get; set; } /*= false;*/
 
         // constructor
         public ClientData(string username, string address, short port, bool is_werewolf = false)
