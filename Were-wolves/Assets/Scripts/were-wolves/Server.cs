@@ -18,7 +18,8 @@ namespace WereWolves
         // Received data string.
         public StringBuilder sb = new StringBuilder();
     }
-    class Server
+
+    public class Server
     {
         short listenPort = 8282;
         public static ManualResetEvent allDone = new ManualResetEvent(false);

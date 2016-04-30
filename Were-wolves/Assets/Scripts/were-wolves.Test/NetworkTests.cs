@@ -49,11 +49,7 @@ namespace WereWolves.Tests
             client1.sendToServer(s);
             Thread.Sleep(1000);
             string r = server1.receivedString;
-
-            Thread.Sleep(1000);
-            string t = client1.receivedString;
-            //Assert.That(null,r);
-            Assert.That(t, Is.EqualTo(r));
+            Assert.That(s, Is.EqualTo(r));
         }
 
         [Test]

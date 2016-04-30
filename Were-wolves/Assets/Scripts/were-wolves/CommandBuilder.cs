@@ -233,6 +233,17 @@ namespace WereWolves
             return this;
         }
 
+        // Start vote
+        public CommandBuilder startVote(bool isDay)
+        {
+            if (command.Count > 0)
+                Clear();
+            
+            command.Add("method", "vote_now");
+            command.Add("phase", isDay ? "day" : "night");
+            return this;
+        }
+
         public string build()
         {   
             string jsonCom = JsonConvert.SerializeObject(command);
