@@ -5,6 +5,18 @@ using System.Text;
 
 namespace WereWolves
 {
+    public class UdpState
+    {
+        public UdpClient u;
+        public IPEndPoint e;
+        public UdpState() { }
+        public UdpState(UdpClient u, IPEndPoint e)
+        {
+            this.u = u;
+            this.e = e;
+        }
+    }
+
     public class Client
     {
         short listenPort = 8282;

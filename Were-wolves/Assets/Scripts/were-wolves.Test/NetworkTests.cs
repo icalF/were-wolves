@@ -14,7 +14,7 @@ namespace WereWolves.Tests
         {
             client1 = new Client(8181);
             client2 = new Client(8383);
-            server1 = new Server();
+            server1 = new Server(8282);
         }
 
         [TestFixtureTearDown]

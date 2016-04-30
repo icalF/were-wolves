@@ -244,6 +244,17 @@ namespace WereWolves
             return this;
         }
 
+        // Get selected KPU
+        public CommandBuilder kpuSelected(int kpu)
+        {
+            if (command.Count > 0)
+                Clear();
+
+            command.Add("method", "kpu_selected");
+            command.Add("kpu_id", kpu);
+            return this;
+        }
+
         public string build()
         {   
             string jsonCom = JsonConvert.SerializeObject(command);

@@ -2,17 +2,18 @@
 using System.Text;
 using System.Threading;
 using System.Net;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
+using System.Collections.Generic;
 
 namespace WereWolves
-    {// State object for reading client data asynchronously
+{
+    // State object for reading client data asynchronously
     public class StateObject
     {
         // Client  socket.
         public Socket workSocket = null;
         // Size of receive buffer.
-        public const int BufferSize = 1024;
+        public const int BufferSize = 256;
         // Receive buffer.
         public byte[] buffer = new byte[BufferSize];
         // Received data string.
@@ -21,28 +22,33 @@ namespace WereWolves
 
     public class Server
     {
-        short listenPort = 8282;
-        public static ManualResetEvent allDone = new ManualResetEvent(false);
+        short listenPort = 8282;        // default
 
         public IPEndPoint ipep;
         UdpClient udpServer;
+        Socket tcpServer;
 
-        ClientData[] clients;
+        List<ClientData> clients;
         CommandBuilder builder;
 
-        Socket tcpServer;
+        static ManualResetEvent allDone;
         byte[] data;
         int stage;
-        public string receivedString ="";
-        short kpuId;
-        public Server()
+        public string receivedString = "";
+        int kpuId;
+
+        public Server(short port)
         {
+            listenPort = port;
+            allDone = new ManualResetEvent(false);
+            builder = new CommandBuilder(); 
+
             IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
             IPAddress ipAddress = ipHostInfo.AddressList[0];
             ipep = new IPEndPoint(ipAddress, listenPort);
             udpServer = new UdpClient(ipep);
-            builder = new CommandBuilder(); 
             tcpServer = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
+
             try
             {
                 tcpServer.Bind(ipep);
@@ -50,31 +56,20 @@ namespace WereWolves
                 allDone.Reset();
 
                 Console.WriteLine("Waiting for a connection...");
-                tcpServer.BeginAccept(
-                    new AsyncCallback(receiveTcp),
-                    tcpServer);
+                tcpServer.BeginAccept(new AsyncCallback(receiveTcp), tcpServer);
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
-            // TcpState sta = new TcpState(tcpServer, ipep);
-            //tcpServer.BeginReceive(new AsyncCallback(receiveTcp), sta);
-
         }
+
         ~Server()
         {
-            //tcpClient.Dispose();
             tcpServer.Close();
-
-            //udpClient.Dispose();
             udpServer.Close();
         }
-        public void setServer()
-        {
-            // clean resources used by socket up
-            
-        }
+
         public void receiveTcp(IAsyncResult ar)
         {
             // Signal the main thread to continue.
@@ -90,9 +85,10 @@ namespace WereWolves
             handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                 new AsyncCallback(ReadCallback), state);
         }
+
         public void ReadCallback(IAsyncResult ar)
         {
-            String content = String.Empty;
+            string content = string.Empty;
         
             // Retrieve the state object and the handler socket
             // from the asynchronous state object.
@@ -102,10 +98,10 @@ namespace WereWolves
             // Read data from the client socket. 
             int bytesRead = handler.EndReceive(ar);
 
-            if (bytesRead > 0) {
+            if (bytesRead > 0)
+            {
                 // There  might be more data, so store the data received so far.
-                state.sb.Append(Encoding.ASCII.GetString(
-                    state.buffer,0,bytesRead));
+                state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
 
                 // Check for end-of-file tag. If it is not there, read 
                 // more data.
@@ -118,23 +114,22 @@ namespace WereWolves
                     Console.WriteLine("Read {0} bytes from socket. \n Data : {1}",
                         content.Length, content );
                     // Echo the data back to the client.
-                } else {
-                    // Not all data received. Get more.
-                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
-                    new AsyncCallback(ReadCallback), state);
                 }
-
-
+                else
+                {
+                    // Not all data received. Get more.
+                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReadCallback), state);
+                }
+            }
         }
-    }
-        public void Send(Socket handler, String data)
+                
+        public void Send(Socket handler, string data)
         {
             // Convert the string data to byte data using ASCII encoding.
             byte[] byteData = Encoding.ASCII.GetBytes(data);
 
             // Begin sending the data to the remote device.
-            handler.BeginSend(byteData, 0, byteData.Length, 0,
-                new AsyncCallback(SendCallback), handler);
+            handler.BeginSend(byteData, 0, byteData.Length, 0, new AsyncCallback(SendCallback), handler);
         }
 
         private void SendCallback(IAsyncResult ar)
@@ -150,33 +145,11 @@ namespace WereWolves
 
                 handler.Shutdown(SocketShutdown.Both);
                 handler.Close();
-
             }
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
             }
         }
-
-    public void receiveUdp(IAsyncResult ar)
-    {
-        UdpClient u = ((UdpState)(ar.AsyncState)).u;
-        IPEndPoint e = ((UdpState)(ar.AsyncState)).e;
-
-        Socket handler = tcpServer.Accept();
-        receivedString = null;
-        while (true)
-        {
-            data = new byte[1024];
-            int bytesRec = handler.Receive(data);
-            receivedString += Encoding.ASCII.GetString(data, 0, bytesRec);
-            if (receivedString.IndexOf("<EOF>") > -1)
-            {
-                break;
-            }
-        }
-        Console.WriteLine("\nPress ENTER to continue...");
-        Console.Read();
-    }
     }
 }
