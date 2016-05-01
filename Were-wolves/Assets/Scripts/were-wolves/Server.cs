@@ -1,9 +1,9 @@
 ﻿using System;
-using System.Text;
-using System.Threading;
+using System.Collections.Generic;
 using System.Net;
 using System.Net.Sockets;
-using System.Collections.Generic;
+using System.Text;
+using System.Threading;
 
 namespace WereWolves
 {
@@ -11,7 +11,7 @@ namespace WereWolves
     public class StateObject
     {
         // Client  socket.
-        public Socket workSocket = null;
+        public Socket workSocket;
         // Size of receive buffer.
         public const int BufferSize = 256;
         // Receive buffer.
@@ -56,7 +56,7 @@ namespace WereWolves
                 allDone.Reset();
 
                 Console.WriteLine("Waiting for a connection...");
-                tcpServer.BeginAccept(new AsyncCallback(receiveTcp), tcpServer);
+                tcpServer.BeginAccept(receiveTcp, tcpServer);
             }
             catch (Exception e)
             {
@@ -83,7 +83,7 @@ namespace WereWolves
             StateObject state = new StateObject();
             state.workSocket = handler;
             handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
-                new AsyncCallback(ReadCallback), state);
+                ReadCallback, state);
         }
 
         public void ReadCallback(IAsyncResult ar)
@@ -118,7 +118,7 @@ namespace WereWolves
                 else
                 {
                     // Not all data received. Get more.
-                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, new AsyncCallback(ReadCallback), state);
+                    handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0, ReadCallback, state);
                 }
             }
         }
@@ -129,7 +129,7 @@ namespace WereWolves
             byte[] byteData = Encoding.ASCII.GetBytes(data);
 
             // Begin sending the data to the remote device.
-            handler.BeginSend(byteData, 0, byteData.Length, 0, new AsyncCallback(SendCallback), handler);
+            handler.BeginSend(byteData, 0, byteData.Length, 0, SendCallback, handler);
         }
 
         private void SendCallback(IAsyncResult ar)

@@ -12,11 +12,6 @@ namespace WereWolves
         private ClientData[] clients;
         private int proposal_id;
 
-        public Command ()
-        {
-            // bind to socket
-        }
-
         public void send ()
         {
 

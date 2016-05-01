@@ -1,13 +1,13 @@
 using System;
-using Newtonsoft.Json;
 using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace WereWolves
 {
     [JsonConverter(typeof(ClientSerializer))]
     public class ClientData : object
     {
-        static int globalId = 0;
+        static int globalId;
 
         public int player_id { get; set; }
         public bool is_alive { get; set; }
@@ -119,10 +119,7 @@ namespace WereWolves
 
                 return cl;
             }
-            else
-            {
-                throw new JsonSerializationException();
-            }
+            throw new JsonSerializationException();
         }
 
         public override bool CanConvert(Type objectType)
