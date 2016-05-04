@@ -197,5 +197,23 @@ namespace WereWolves.Tests
             string expectedResult = "{\"method\":\"vote_result\",\"vote_status\":-1,\"vote_result\":[[0,1],[1,2]]}";
             Assert.That(result, Is.EqualTo(expectedResult));
         }
+
+        // Start vote
+        [Test]
+        public void startVoteTest()
+        {
+            string result = sut.startVote(false).build();
+            string expectedResult = "{\"method\":\"vote_now\",\"phase\":\"night\"}";
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
+
+        // Get selected KPU
+        [Test]
+        public void kpuSelectedTest()
+        {
+            string result = sut.kpuSelected(3).build();
+            string expectedResult = "{\"method\":\"kpu_selected\",\"kpu_id\":3}";
+            Assert.That(result, Is.EqualTo(expectedResult));
+        }
     }
 }

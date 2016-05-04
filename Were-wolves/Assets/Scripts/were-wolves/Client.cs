@@ -8,6 +8,18 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
 namespace WereWolves
 {
+    public class UdpState
+    {
+        public UdpClient u;
+        public IPEndPoint e;
+        public UdpState() { }
+        public UdpState(UdpClient u, IPEndPoint e)
+        {
+            this.u = u;
+            this.e = e;
+        }
+    }
+
     public class Client
     {
         short listenPort = 8282;
@@ -29,6 +41,12 @@ namespace WereWolves
         short kpuId;
         string queue;
         string yangterlempar = "";
+
+        int player_id;
+        int day = 0;
+        bool isDay = false;
+        bool isLeader = false;
+
         public Client(short port)
         {
             //allDone.Reset();
@@ -86,8 +104,12 @@ namespace WereWolves
         public void setServer(string host, short port)
         {
             // clean resources used by socket up
+
             //tcpClient.Close();              
             IPEndPoint remoteEP = new IPEndPoint(IPAddress.Parse(host), port);
+            if (tcpClient!=null&&tcpClient.Connected)
+                tcpClient.Close();               
+
             tcpClient = new Socket(AddressFamily.InterNetwork, SocketType.Stream, ProtocolType.Tcp);
             tcpClient.BeginConnect(remoteEP,
                 new AsyncCallback(ConnectCallback), tcpClient);
@@ -120,6 +142,42 @@ namespace WereWolves
                 Console.WriteLine(e.ToString());
             }
         }
+        private void startGame() { changePhase(true); }
+
+        private void changePhase(bool isDay)
+        {
+            if (isDay)
+            {
+                day++;
+                updateClientsList();
+            }
+            this.isDay = isDay;
+        }
+
+        private void voteKpu()
+        {
+            if (isLeader)
+            {
+                proposePrepare();
+                proposeAccept();
+            }
+        }
+
+        private void updateKPU()
+        {
+            // TODO : update KPU from server request
+        }
+
+        private void proposeAccept()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void proposePrepare()
+        {
+            throw new NotImplementedException();
+        }
+
         public void sendToServer(string command)
         {
             sentDone.Reset();
@@ -164,10 +222,19 @@ namespace WereWolves
         public ClientData[] list()
         {
             sendToServer(builder.listClient().build());
+            // TODO : return from bucket
             return null;
         }
 
-        public void updateClientsList() { clients = list(); }
+        public void updateClientsList()
+        {
+            clients = list();
+            for (int i = clients.Length - 1, counter = 2; i >= 0 && counter > 0; i--)
+            {
+                if (clients[i].isAlive()) counter--;
+                if (i == player_id) isLeader = true;
+            }
+        }
 
         public void voteKill(bool werewolf, int id)
         {

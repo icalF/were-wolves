@@ -52,10 +52,8 @@ namespace WereWolves
             {
                 int[] arr = serializer.Deserialize<int[]>(reader);
                 return new Tuple(arr[0], arr[1]);
-            } else
-            {
-                throw new JsonSerializationException();
             }
+            throw new JsonSerializationException();
         }
 
         public override bool CanConvert(Type objectType)

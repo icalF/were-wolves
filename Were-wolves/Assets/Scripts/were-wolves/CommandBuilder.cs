@@ -1,5 +1,5 @@
-﻿using Newtonsoft.Json;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
+using Newtonsoft.Json;
 
 namespace WereWolves
 {
@@ -230,6 +230,28 @@ namespace WereWolves
             if (valid)
                 command.Add("player_id", id);
             command.Add("vote_result", res);
+            return this;
+        }
+
+        // Start vote
+        public CommandBuilder startVote(bool isDay)
+        {
+            if (command.Count > 0)
+                Clear();
+            
+            command.Add("method", "vote_now");
+            command.Add("phase", isDay ? "day" : "night");
+            return this;
+        }
+
+        // Get selected KPU
+        public CommandBuilder kpuSelected(int kpu)
+        {
+            if (command.Count > 0)
+                Clear();
+
+            command.Add("method", "kpu_selected");
+            command.Add("kpu_id", kpu);
             return this;
         }
 
