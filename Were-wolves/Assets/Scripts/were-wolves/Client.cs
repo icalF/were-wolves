@@ -214,11 +214,65 @@ namespace WereWolves
         public void join(string username) {
             sendToServer(builder.join(username, localIP, listenPort).build());
         }
-
+        public int getProposerId()
+        {
+            return 1;
+        }
         public void leave() { sendToServer(builder.leave().build()); }
+        private void methodReceivedPaxosHandler(Dictionary<string, string> json, string s, int idSender)
+        {
+            string command;
+            switch (s)
+            {
+                case "prepare_proposal":
+                    command = builder.proposeResp(0, "accepted", kpuId).build();
+                    sendToPeer(idSender, command);
+                    break;
+                case "accept_proposal":
+                    command = builder.response(0, "accepted").build();
+                    sendToPeer(idSender, command);
+                    break;
+                case "accepted_proposal":
+                    command = builder.response(0, "").build();
+                    sendToPeer(idSender, command);
+                    break;
+                case "vote_werewolf":
+                    command = builder.response(0, "").build();
+                    sendToPeer(idSender, command);
+                    break;
+                default:
+                    break;
 
+            }
+        }
+        private void responseReceivedPaxosHandler(Dictionary<string, string> json, string s, int idSender)
+        {
+            string command;
+            switch (s)
+            {
+                case "prepare_proposal":
+                    command = builder.proposeResp(0, "accepted", kpuId).build();
+                    sendToPeer(idSender, command);
+                    break;
+                case "accept_proposal":
+                    command = builder.response(0, "accepted").build();
+                    sendToPeer(idSender, command);
+                    break;
+                case "accepted_proposal":
+                    command = builder.response(0, "").build();
+                    sendToPeer(idSender, command);
+                    break;
+                case "vote_werewolf":
+                    command = builder.response(0, "").build();
+                    sendToPeer(idSender, command);
+                    break;
+                default:
+                    break;
+
+            }
+        }
         public void ready() { sendToServer(builder.ready().build()); }
-
+        
         public ClientData[] list()
         {
             sendToServer(builder.listClient().build());
