@@ -6,8 +6,37 @@ using System.Threading;
 using System.Collections.Generic;
 using Newtonsoft.Json.Linq;
 using Newtonsoft.Json;
+
 namespace WereWolves
 {
+    public class Bucket
+    {
+        public string[,] data;
+        public int size;
+        public Bucket()
+        {
+            data = new string[60,2];
+            size = 0;
+        }
+        public void pushData(string json,string id){
+            data[size, 0] = id;
+            data[size, 1] = json;
+            size++;
+        }
+        public string[,] popData()
+        {
+            string[,] s = new string[1, 2];
+            size--;
+            s[0,0] = data[size,0];
+            s[0, 1] = data[size, 2];
+            return s; 
+        }
+        public int getSize()
+        {
+            return size;
+        }
+        
+    } 
     public class UdpState
     {
         public UdpClient u;
@@ -38,15 +67,16 @@ namespace WereWolves
         IPEndPoint e;
         string localIP;
         public string receivedString;
-        short kpuId;
-        string queue;
-        string yangterlempar = "";
-
+        short kpuId = 0;
+        public string yangterlempar = "";
+        Bucket queue;
         int player_id;
+        string role;
+        string[] friends;
         int day = 0;
         bool isDay = false;
         bool isLeader = false;
-
+        bool isGet = false;
         public Client(short port)
         {
             //allDone.Reset();
@@ -154,30 +184,6 @@ namespace WereWolves
             this.isDay = isDay;
         }
 
-        private void voteKpu()
-        {
-            if (isLeader)
-            {
-                proposePrepare();
-                proposeAccept();
-            }
-        }
-
-        private void updateKPU()
-        {
-            // TODO : update KPU from server request
-        }
-
-        private void proposeAccept()
-        {
-            throw new NotImplementedException();
-        }
-
-        private void proposePrepare()
-        {
-            throw new NotImplementedException();
-        }
-
         public void sendToServer(string command)
         {
             sentDone.Reset();
@@ -214,75 +220,22 @@ namespace WereWolves
         public void join(string username) {
             sendToServer(builder.join(username, localIP, listenPort).build());
         }
-        public int getProposerId()
-        {
-            return 1;
-        }
+        
         public void leave() { sendToServer(builder.leave().build()); }
-        private void methodReceivedPaxosHandler(Dictionary<string, string> json, string s, int idSender)
-        {
-            string command;
-            switch (s)
-            {
-                case "prepare_proposal":
-                    command = builder.proposeResp(0, "accepted", kpuId).build();
-                    sendToPeer(idSender, command);
-                    break;
-                case "accept_proposal":
-                    command = builder.response(0, "accepted").build();
-                    sendToPeer(idSender, command);
-                    break;
-                case "accepted_proposal":
-                    command = builder.response(0, "").build();
-                    sendToPeer(idSender, command);
-                    break;
-                case "vote_werewolf":
-                    command = builder.response(0, "").build();
-                    sendToPeer(idSender, command);
-                    break;
-                default:
-                    break;
-
-            }
-        }
-        private void responseReceivedPaxosHandler(Dictionary<string, string> json, string s, int idSender)
-        {
-            string command;
-            switch (s)
-            {
-                case "prepare_proposal":
-                    command = builder.proposeResp(0, "accepted", kpuId).build();
-                    sendToPeer(idSender, command);
-                    break;
-                case "accept_proposal":
-                    command = builder.response(0, "accepted").build();
-                    sendToPeer(idSender, command);
-                    break;
-                case "accepted_proposal":
-                    command = builder.response(0, "").build();
-                    sendToPeer(idSender, command);
-                    break;
-                case "vote_werewolf":
-                    command = builder.response(0, "").build();
-                    sendToPeer(idSender, command);
-                    break;
-                default:
-                    break;
-
-            }
-        }
+        
         public void ready() { sendToServer(builder.ready().build()); }
         
-        public ClientData[] list()
+        public void sendReqList()
         {
             sendToServer(builder.listClient().build());
             // TODO : return from bucket
-            return null;
         }
 
         public void updateClientsList()
         {
-            clients = list();
+            isGet = false;
+            sendReqList();
+            while (!isGet) ;
             for (int i = clients.Length - 1, counter = 2; i >= 0 && counter > 0; i--)
             {
                 if (clients[i].isAlive()) counter--;
@@ -313,6 +266,119 @@ namespace WereWolves
             handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                 new AsyncCallback(ReadCallback), state);
         }
+        public int getIdSender(String ipstring,String portstring)
+        {
+            int id = -1;
+            int port = Int32.Parse(portstring);
+            updateClientsList();
+            foreach(ClientData haha in clients ){
+                if (haha.getPort()==port && haha.getAddress().Equals(ipstring))
+                {
+                    id = haha.getId();
+                }
+            }
+            return id;
+        }
+        private void methodReceivedPaxosHandler(Dictionary<string, string> json, int idSender)
+        {
+            string command;
+            switch (json["method"])
+            {
+                case "prepare_proposal":
+                    command = builder.proposeResp(0, "accepted", kpuId).build();
+                    sendToPeer(idSender, command);
+                    break;
+                case "accept_proposal":
+                    command = builder.response(0, "accepted").build();
+                    sendToPeer(idSender, command);
+                    break;
+                case "accepted_proposal":
+                    command = builder.response(0, "").build();
+                    sendToPeer(idSender, command);
+                    break;
+                case "vote_werewolf":
+                    command = builder.response(0, "").build();
+                    sendToPeer(idSender, command);
+                    break;
+                default:
+                    break;
+
+            }
+        }
+
+        private void voteKpu()
+        {
+            if (isLeader)
+            {
+                proposePrepare();
+                proposeAccept();
+            }
+        }
+
+        private void updateKPU()
+        {
+            // TODO : update KPU from server request
+        }
+
+        private void proposeAccept()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void proposePrepare()
+        {
+            throw new NotImplementedException();
+        }
+
+        private void methodReceivedServerHandler(Dictionary<string, string> json)
+        {
+            string command;
+            switch (json["method"])
+            {
+                case "vote_now":
+                    command = builder.response(0, "good").build();
+                    sendToServer(command);
+                    voteKpu();
+                    break;
+                case "game_over":
+                    command = builder.response(0, "accepted").build();
+                    sendToServer(command);
+                    break;
+                case "change_phase":
+                    if (json["time"].Equals("day"))
+                        isDay = true;
+                    else isDay = false;
+                    day = Int32.Parse(json["days"]);
+                    command = builder.response(0, "").build();
+                    sendToServer(command);
+                    break;
+                case "start":
+                    if (json["time"].Equals("day"))
+                        isDay = true;
+                    role = json["role"];
+                    friends = JsonConvert.DeserializeObject<string[]>(json["friends"]);
+                    command = builder.response(0, "").build();
+                    sendToServer(command);
+                    break;
+                default:
+                    break;
+
+            }
+        }
+        private void statusReceivedServerHandler(Dictionary<string, string> json)
+        {
+            string command;
+            switch (json["clients"])
+            {
+                case "":
+                    break;
+                default:
+
+                    break;
+
+            }
+        }
+
         public void ReceiveCallback(IAsyncResult ar)
         {
             UdpClient u = ((UdpState)(ar.AsyncState)).u;
@@ -320,19 +386,27 @@ namespace WereWolves
 
             byte[] receiveBytes = u.EndReceive(ar, ref e);
             receivedString = Encoding.ASCII.GetString(receiveBytes);
-            Dictionary<string, string> json = JsonConvert.DeserializeObject<Dictionary<string, string>>(receivedString); ;
+            Dictionary<string, string> json = JsonConvert.DeserializeObject<Dictionary<string, string>>(receivedString); 
             //receivedString = json.ToString();
+
+            string id = u.Client.RemoteEndPoint.ToString();
+            int indexPort = id.IndexOf(":");
+            string portstring = id.Substring(indexPort+1);
+            string ipstring = id.Substring(0, indexPort);
             if (json.ContainsKey("method"))
             {
                 //request
                 //json.TryGetValue("method", out receivedString);
-
+                string s = json["method"];
+                methodReceivedPaxosHandler(json, getIdSender(ipstring, portstring));
             }
             else if (json.ContainsKey("status"))
             {
                 //response
                 //json.TryGetValue("status", out receivedString);
-                
+
+                string jsonstring = json.ToString();
+                queue.pushData(getIdSender(ipstring, portstring).ToString(), receivedString);
             }
 
         }
@@ -355,12 +429,11 @@ namespace WereWolves
                 // There  might be more data, so store the data received so far.
                 state.sb.Append(Encoding.ASCII.GetString(
                     state.buffer, 0, bytesRead));
-
                 // Check for end-of-file tag. If it is not there, read 
                 // more data.
                 content = state.sb.ToString();
                 receivedString = content;
-                if (content.IndexOf("<EOF>") > -1)
+                /*if (content.IndexOf("<EOF>") > -1)
                 {
                     // All the data has been read from the 
                     // client. Display it on the console.
@@ -372,8 +445,28 @@ namespace WereWolves
                     // Not all data received. Get more.
                     handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                     new AsyncCallback(ReadCallback), state);
-                }
+                }*/
+                Dictionary<string, string> json = JsonConvert.DeserializeObject<Dictionary<string, string>>(receivedString) ;
+                //receivedString = json.ToString();
 
+                if (json.ContainsKey("method"))
+                {
+                    //request
+                    //json.TryGetValue("method", out receivedString);
+                    string s = json["method"];
+                    methodReceivedServerHandler(json);
+                }
+                else if (json.ContainsKey("status"))
+                {
+                    //response
+                    //json.TryGetValue("status", out receivedString);
+                    if (json.ContainsKey("clients"))
+                    {
+                        clients = JsonConvert.DeserializeObject<ClientData[]>(json["clients"]);
+                        isGet = true;
+                    }
+                    string jsonstring = json.ToString();
+                }
 
             }
         }
