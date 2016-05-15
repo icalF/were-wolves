@@ -29,19 +29,24 @@ namespace WereWolves
         Socket tcpServer;
 
         List<ClientData> clients;
+        List<ClientData> wolves;
         CommandBuilder builder;
 
         static ManualResetEvent allDone;
         byte[] data;
-        int stage;
+        int day = 0;
+        bool isDay = true;
         public string receivedString = "";
         int kpuId;
+        string winner = "";
+        List<bool> isClientReady;
 
         public Server(short port)
         {
             listenPort = port;
             allDone = new ManualResetEvent(false);
-            builder = new CommandBuilder(); 
+            builder = new CommandBuilder();
+            isClientReady = new List<bool>();
 
             IPHostEntry ipHostInfo = Dns.Resolve(Dns.GetHostName());
             IPAddress ipAddress = ipHostInfo.AddressList[0];
@@ -69,6 +74,66 @@ namespace WereWolves
             tcpServer.Close();
             udpServer.Close();
         }
+
+        private void addClient()
+        {
+            bool werewolf = new Random().NextDouble() < 0.3;
+            // TODO : read data from socket
+            isClientReady.Add(false);
+            var client = new ClientData(null, null, 0, werewolf);
+            clients.Add(client);
+            if (werewolf) wolves.Add(client);
+        }
+
+        private void startGame()
+        {
+            // assert all clients ready
+            foreach (var client in clients)
+            {
+                bool werewolf = client.isWerewolf();
+                List<ClientData> friends = null;
+                if (werewolf) {
+                    friends = new List<ClientData>();
+                    foreach (var wolf in wolves)
+                    {
+                        if (!wolf.Equals(client))
+                            friends.Add(wolf);
+                    }
+                }
+                builder.start(false, null, werewolf, friends);
+            }
+
+            day = 0;
+            isDay = true;
+        }
+
+        private void startVote()
+        {
+            foreach (var client in clients)
+            {
+                builder.startVote(isDay);
+            }
+
+            // TODO : wait result and save; revote if result failed
+        }
+        private void changePhase()
+        {
+            foreach (var client in clients)
+            {
+                builder.change(isDay, "", day);
+            }
+
+        }
+        private void gameOver()
+        {
+            foreach (var client in clients)
+            {
+                winner = "werewolf";
+                builder.over(winner, "");
+            }
+        }
+        private void 
+        private void leaveGame() { }
 
         public void receiveTcp(IAsyncResult ar)
         {

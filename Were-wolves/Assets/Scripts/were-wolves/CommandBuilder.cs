@@ -85,7 +85,7 @@ namespace WereWolves
         }
 
         // Change phase
-        public CommandBuilder change (bool night, string desc, int days)
+        public CommandBuilder change(bool night, string desc, int days)
         {
             if (command.Count > 0) 
                 Clear();
@@ -98,14 +98,14 @@ namespace WereWolves
         }
 
         // Start game
-        public CommandBuilder start (bool night, string desc, string role, object friends)
+        public CommandBuilder start (bool night, string desc, bool isWerewolf, object friends)
         {
             if (command.Count > 0) 
                 Clear();
 
             command.Add("method", "start");
             command.Add("time", night ? "night" : "day");
-            command.Add("role", role);
+            command.Add("role", isWerewolf ? "werewolf" : "civilian");
             command.Add("description", desc);
 
             if (friends != null)
