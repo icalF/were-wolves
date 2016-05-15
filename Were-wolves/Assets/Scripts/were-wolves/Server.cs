@@ -38,11 +38,11 @@ namespace WereWolves
         byte[] data;
         int day = 0;
         bool isDay = true;
-
-        public Dictionary<string, string> receivedReqs;
+        bool isGame = false;
 
         public int kpuId;
-        public string winner = "";
+        int killed;
+        public string winner;
         public List<bool> isClientReady;
 
         static int Main(string[] args)
@@ -104,14 +104,25 @@ namespace WereWolves
             tcpServer.Close();
         }
 
-        private void addClient()
+        private bool addClient(ClientData client)
         {
             bool werewolf = new Random().NextDouble() < 0.3;
-            // TODO : read data from socket
+
+            foreach (ClientData ecl in clients)
+            {
+                if (ecl.getUsername().Equals(client.getUsername()))
+                    return false;
+            }
+            
             isClientReady.Add(false);
-            var client = new ClientData(null, null, 0, werewolf);
             clients.Add(client);
-            if (werewolf) wolves.Add(client);
+
+            if (werewolf)
+            {
+                client.setRole(true);
+                wolves.Add(client);
+            }
+            return true;
         }
 
         private void startGame()
@@ -121,6 +132,7 @@ namespace WereWolves
             {
                 bool werewolf = client.isWerewolf();
                 List<ClientData> friends = null;
+
                 if (werewolf) {
                     friends = new List<ClientData>();
                     foreach (var wolf in wolves)
@@ -162,9 +174,26 @@ namespace WereWolves
                 winner = "werewolf";
                 builder.over(winner, "");
             }
+
+            for (int i = 0; i < isClientReady.Count; ++i) isClientReady[i] = false;
         }
 
-        private void leaveGame() { }
+        private void leaveGame(string endPoint) {
+            ClientData client = findByRemote(endPoint);
+            if (!clients.Remove(client))
+                throw new SystemException("Remove list failed");
+        }
+
+        private ClientData findByRemote(string endPoint)
+        {
+            for (int i = 0; i < clientHandlers.Count; ++i)
+            {
+                Socket ec = clientHandlers[i];
+                if (ec.RemoteEndPoint.ToString() == endPoint)
+                    return clients[i];                    
+            }            
+            return null;
+        }
 
         public void AcceptClient(IAsyncResult ar)
         {            
@@ -182,12 +211,14 @@ namespace WereWolves
         }
 
         public void ReadCallback(IAsyncResult ar)
-        { 
-            String content = String.Empty;
+        {
+            string content = string.Empty;
+
             // Retrieve the state object and the handler socket
             // from the asynchronous state object.
             StateObject state = (StateObject) ar.AsyncState;
             Socket handler = state.workSocket;
+
             // Read data from the client socket. 
             int bytesRead = handler.EndReceive(ar);
             
@@ -199,9 +230,13 @@ namespace WereWolves
                 // more data.
                 content = state.sb.ToString();
 
-                while (receivedReqs != null) { }            // wait until empty
+                Dictionary<string, string> income = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
 
-                receivedReqs = JsonConvert.DeserializeObject< Dictionary<string, string> > (content);
+                // Handle every request
+                if (income.ContainsKey("command"))            // save only commands (ignore response)
+                {
+                    handleReq(handler, income);
+                }
 
                 if (content.IndexOf("<EOF>") > -1) {
                     // All the data has been read from the 
@@ -215,7 +250,97 @@ namespace WereWolves
             }
         }
 
-        public void SendToClients(String data)
+        private void handleReq(Socket handler, Dictionary<string, string> income)
+        {
+            switch (income["command"])
+            {
+                case "join":
+                    if (isGame)
+                    {
+                        SendToClient(handler,
+                            builder.joinResp(1,
+                                "Please wait,game is currently running")
+                                .build());
+
+                        break;
+                    }
+
+                    ClientData client = new ClientData(
+                        income["username"], 
+                        income["udp_address"],
+                        short.Parse(income["port"]));
+
+                    if (addClient(client))
+                    {
+                        SendToClient(handler,
+                            builder.joinResp(0,
+                                client.getId())      
+                                .build());
+                    } else
+                    {
+                        SendToClient(handler,
+                            builder.joinResp(1,
+                                "User exists")
+                                .build());
+                    }
+                    break;
+
+                case "leave":
+                    try
+                    {
+                        leaveGame(handler.RemoteEndPoint.ToString());
+
+                        SendToClient(handler,
+                            builder.response(0)
+                                .build());
+                    } catch (SystemException e)
+                    {
+                        string msg = e.Message;
+                        Console.Write(msg);
+
+                        SendToClient(handler,
+                            builder.response(1, msg)
+                                .build());
+                    }
+                    break;
+
+                case "ready":
+                    isClientReady[
+                        findByRemote(handler.RemoteEndPoint.ToString())
+                            .getId()] 
+                        = true;
+
+                    SendToClient(handler,
+                        builder.response(0,
+                            "Waiting for other player to start")
+                            .build());
+
+                    break;
+
+                case "client_address":
+                    SendToClient(handler,
+                        builder.listClientResp(0,
+                            "list of clients retrieved", 
+                            clients).build());
+                    break;
+
+                case "accepted_proposal":
+                    kpuId = int.Parse(income["kpu_id"]);
+
+                    SendToClient(handler,
+                        builder.response(0, "").build());
+                    break;
+
+                case "vote_result":
+                case "vote_result_civilian":
+                case "vote_result_werewolf":
+                    if (income["kpu_id"].Equals("1"))
+                        killed = int.Parse(income["player_killed"]);
+                    break;
+            }
+        }
+
+        public void SendToClients(string data)
         {
             byte[] byteData = Encoding.ASCII.GetBytes(data);
             accDone.WaitOne();
@@ -232,7 +357,7 @@ namespace WereWolves
 
         private void SendCallback(IAsyncResult ar)
         {
-            try
+            /*try
             {
                 // Retrieve the socket from the state object.
                 Socket handler = (Socket)ar.AsyncState;
@@ -248,7 +373,7 @@ namespace WereWolves
             catch (Exception e)
             {
                 Console.WriteLine(e.ToString());
-            }
+            }*/
         }
 
         /*public void ReceiveUdp(IAsyncResult ar)

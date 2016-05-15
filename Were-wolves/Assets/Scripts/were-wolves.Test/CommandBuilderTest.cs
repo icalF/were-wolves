@@ -93,7 +93,7 @@ namespace WereWolves.Tests
         [Test]
         public void startTest()
         {
-            string result = sut.start(false, "game is started", "werewolf", new string[]{"ahmad", "dariel"} ).build();
+            string result = sut.start(false, "game is started", true, new string[]{"ahmad", "dariel"} ).build();
             string expectedResult = "{\"method\":\"start\",\"time\":\"day\",\"role\":\"werewolf\",\"description\":\"game is started\",\"friend\":[\"ahmad\",\"dariel\"]}";
             Assert.That(result, Is.EqualTo(expectedResult));
         }

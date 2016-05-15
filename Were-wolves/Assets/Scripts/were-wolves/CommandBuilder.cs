@@ -13,7 +13,7 @@ namespace WereWolves
         }
 
         // General response
-        public CommandBuilder response (int status, string desc)
+        public CommandBuilder response (int status, string desc = null)
         {
             if (command.Count > 0) 
                 Clear();

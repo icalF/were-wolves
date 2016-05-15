@@ -8,6 +8,7 @@ namespace WereWolves
     public class ClientData : object
     {
         static int globalId;
+        private string endPoint;
 
         public int player_id { get; set; }
         public bool is_alive { get; set; }
@@ -36,6 +37,7 @@ namespace WereWolves
         public short getPort() { return port; }
         public bool isWerewolf() { return is_werewolf; }
         public bool isAlive() { return is_alive; }
+        public string getEndPoint() { return endPoint; }
 
         // setter
         public void killed() { is_alive = false; }
@@ -68,7 +70,13 @@ namespace WereWolves
                 && (getAddress() == p.getAddress())
                 && (getPort() == p.getPort())
                 && (isAlive() == p.isAlive())
-                && (isWerewolf() == p.isWerewolf());
+                && (isWerewolf() == p.isWerewolf())
+                && (getEndPoint() == p.getEndPoint());
+        }
+
+        public void addEndPoint(string v)
+        {
+            endPoint = v;
         }
     }
 
