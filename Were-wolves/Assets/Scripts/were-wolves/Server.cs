@@ -166,7 +166,7 @@ namespace WereWolves
             }
 
         }
-
+		
         private void gameOver()
         {
             foreach (var client in clients)
@@ -183,7 +183,54 @@ namespace WereWolves
             if (!clients.Remove(client))
                 throw new SystemException("Remove list failed");
         }
-
+		
+		private int countclient() {
+				int count = 0;
+				foreach(var client in clients) {
+						if(client.isAlive() == true) {
+								count++;
+							}
+					}
+				return count;
+			}
+		
+		private int countwolves() {
+				int count = 0;
+				foreach(var client in clients) {
+						if(client.isAlive() == true) {
+								count++;
+							}
+					}
+				return count;
+			}
+			
+		public void gameplay () {
+				startGame();
+				while() {
+						if(isDay == true) {
+								changePhase();
+								startVote();
+								foreach(var client in clients) {
+										sendtoclients();
+									}
+								isDay = false;
+							}
+						else if(isDay == false) {
+								changePhase();
+								startVote();
+								foreach(var client in clients) {
+										sendtoclients(kpuId);
+									}
+								isDay = true;
+								day++;
+								if(countwolves() >= countclient()) {
+										break;
+									}
+							}
+					}
+				gameOver();
+			}
+			
         private ClientData findByRemote(string endPoint)
         {
             for (int i = 0; i < clientHandlers.Count; ++i)
