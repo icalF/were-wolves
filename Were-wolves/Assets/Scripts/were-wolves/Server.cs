@@ -141,6 +141,7 @@ namespace WereWolves
                             friends.Add(wolf);
                     }
                 }
+
                 builder.start(false, null, werewolf, friends);
             }
 
@@ -148,18 +149,21 @@ namespace WereWolves
             isDay = true;
         }
 
-        private void startVote()
+        private void doVote()
         {
-            foreach (var client in clients)
+            List<ClientData> list = isDay ? clients : wolves;
+            for (int i = 0; i < list.Count; ++i)
             {
-                builder.startVote(isDay);
+                ClientData cl = list[i];
+                SendToClient(clientHandlers[i], builder.startVote(isDay).build());
             }
-
-            // TODO : wait result and save; revote if result failed
         }
 
         private void changePhase()
         {
+            isDay = !isDay;
+            if (isDay) { day++; kpuId = -1; }
+
             foreach (var client in clients)
             {
                 builder.change(isDay, "", day);
@@ -184,52 +188,55 @@ namespace WereWolves
                 throw new SystemException("Remove list failed");
         }
 		
-		private int countclient() {
-				int count = 0;
-				foreach(var client in clients) {
-						if(client.isAlive() == true) {
-								count++;
-							}
-					}
-				return count;
+		private int countClients() {
+			int count = 0;
+			foreach(var client in clients) {
+				if(client.isAlive() == true) {
+					count++;
+				}
 			}
+			return count;
+		}
 		
-		private int countwolves() {
-				int count = 0;
-				foreach(var client in clients) {
-						if(client.isAlive() == true) {
-								count++;
-							}
-					}
-				return count;
+		private int countWolves() {
+			int count = 0;
+			foreach(var wolf in wolves) {
+				if(wolf.isAlive() == true) {
+					count++;
+				}
 			}
-			
-		public void gameplay () {
-				startGame();
-				while() {
-						if(isDay == true) {
-								changePhase();
-								startVote();
-								foreach(var client in clients) {
-										sendtoclients();
-									}
-								isDay = false;
-							}
-						else if(isDay == false) {
-								changePhase();
-								startVote();
-								foreach(var client in clients) {
-										sendtoclients(kpuId);
-									}
-								isDay = true;
-								day++;
-								if(countwolves() >= countclient()) {
-										break;
-									}
-							}
-					}
-				gameOver();
-			}
+			return count;
+		}
+
+        public void gameplay()
+        {
+            startGame();
+            while (isGame)
+            {
+                changePhase();
+
+                while (kpuId < 0) { }
+                foreach (var client in clients)
+                {
+                    SendToClients(builder.kpuSelected(kpuId).build());
+                }
+
+                doVote();
+                while (killed < 0) { }
+                foreach (var client in clients)
+                {
+                    SendToClients(builder.kpuSelected(kpuId).build());
+                    killed = -1;
+                }
+
+                if (2 * countWolves() >= countClients() ||                  // wolves = humans
+                    countWolves() == 0)                                     // or no wolf
+                {
+                    isGame = false;
+                }
+            }
+            gameOver();
+        }
 			
         private ClientData findByRemote(string endPoint)
         {
@@ -280,7 +287,7 @@ namespace WereWolves
                 Dictionary<string, string> income = JsonConvert.DeserializeObject<Dictionary<string, string>>(content);
 
                 // Handle every request
-                if (income.ContainsKey("command"))            // save only commands (ignore response)
+                if (income.ContainsKey("method"))            // save only commands (ignore response)
                 {
                     handleReq(handler, income);
                 }
@@ -299,7 +306,7 @@ namespace WereWolves
 
         private void handleReq(Socket handler, Dictionary<string, string> income)
         {
-            switch (income["command"])
+            switch (income["method"])
             {
                 case "join":
                     if (isGame)
@@ -389,8 +396,10 @@ namespace WereWolves
 
         public void SendToClients(string data)
         {
-            byte[] byteData = Encoding.ASCII.GetBytes(data);
-            accDone.WaitOne();
+            foreach (Socket sock in clientHandlers)
+            {
+                SendToClient(sock, data);
+            }
         }
                 
         public void SendToClient(Socket handler, string data)
