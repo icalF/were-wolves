@@ -1,8 +1,7 @@
-﻿using System;
+﻿using Newtonsoft.Json;
+using System;
 using System.Collections.Generic;
 using System.Net;
-using System.Diagnostics;
-using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -21,31 +20,45 @@ namespace WereWolves
         // Received data string.
         public StringBuilder sb = new StringBuilder();
     }
+
     public class Server
     {
-        short listenPort = 8282;        // default
+        short listenPort;        
         public static ManualResetEvent allDone = new ManualResetEvent(false);
         public static ManualResetEvent accDone = new ManualResetEvent(false);
 
-
         public IPEndPoint ipep;
         Socket tcpServer;
+        List<Socket> clientHandlers;
 
         List<ClientData> clients;
         List<ClientData> wolves;
         CommandBuilder builder;
        
-        Socket ikkeh;
-        public string yangdilempar = "";
         byte[] data;
         int day = 0;
         bool isDay = true;
-        public string receivedString = "";
-        int kpuId;
-        string winner = "";
-        List<bool> isClientReady;
 
-        public Server(short port)
+        public Dictionary<string, string> receivedReqs;
+
+        public int kpuId;
+        public string winner = "";
+        public List<bool> isClientReady;
+
+        static int Main(string[] args)
+        {
+            try {
+                Server server = new Server();
+            }
+            catch (Exception e)
+            {
+                Console.Write(e.StackTrace);
+            }
+            
+            return 0;
+        }
+
+        public Server(short port = 8282)
         {
             listenPort = port;
             allDone = new ManualResetEvent(false);
@@ -71,21 +84,21 @@ namespace WereWolves
                 Console.WriteLine(e.ToString());
             }
         }
+
         private void loop()
         {
-            int i = 0;
             while (true)
             {
                 allDone.Reset();
                 accDone.Reset();
                 tcpServer.BeginAccept(
-                    new AsyncCallback(receiveTcp),
+                    new AsyncCallback(AcceptClient),
                     tcpServer);
                 accDone.WaitOne();
                 allDone.WaitOne();
-                i++;
             }
         }
+
         ~Server()
         {
             tcpServer.Close();
@@ -132,6 +145,7 @@ namespace WereWolves
 
             // TODO : wait result and save; revote if result failed
         }
+
         private void changePhase()
         {
             foreach (var client in clients)
@@ -140,6 +154,7 @@ namespace WereWolves
             }
 
         }
+
         private void gameOver()
         {
             foreach (var client in clients)
@@ -148,12 +163,11 @@ namespace WereWolves
                 builder.over(winner, "");
             }
         }
-        private void 
+
         private void leaveGame() { }
 
-        public void receiveTcp(IAsyncResult ar)
-        {
-            
+        public void AcceptClient(IAsyncResult ar)
+        {            
             // Get the socket that handles the client request.
             Socket listener = (Socket)ar.AsyncState;
             Socket handler = listener.EndAccept(ar);
@@ -161,8 +175,8 @@ namespace WereWolves
             // Create the state object.
             StateObject state = new StateObject();
             state.workSocket = handler;
-            ikkeh = handler;
             accDone.Set();
+
             handler.BeginReceive(state.buffer, 0, StateObject.BufferSize, 0,
                 ReadCallback, state);
         }
@@ -176,8 +190,7 @@ namespace WereWolves
             Socket handler = state.workSocket;
             // Read data from the client socket. 
             int bytesRead = handler.EndReceive(ar);
-
-            yangdilempar = handler.RemoteEndPoint.ToString();
+            
             if (bytesRead > 0) {
                 // There  might be more data, so store the data received so far.
                 state.sb.Append(Encoding.ASCII.GetString(state.buffer, 0, bytesRead));
@@ -185,9 +198,10 @@ namespace WereWolves
                 // Check for end-of-file tag. If it is not there, read 
                 // more data.
                 content = state.sb.ToString();
-                receivedString = content;
-                // Echo the data back to the client.
-                Send(handler, content);
+
+                while (receivedReqs != null) { }            // wait until empty
+
+                receivedReqs = JsonConvert.DeserializeObject< Dictionary<string, string> > (content);
 
                 if (content.IndexOf("<EOF>") > -1) {
                     // All the data has been read from the 
@@ -201,20 +215,14 @@ namespace WereWolves
             }
         }
 
-        public void SendToClient(String data)
+        public void SendToClients(String data)
         {
             byte[] byteData = Encoding.ASCII.GetBytes(data);
             accDone.WaitOne();
-            //yangdilempar = ikkeh.LocalEndPoint.ToString();
-            
-            ikkeh.SendTo(byteData, ikkeh.LocalEndPoint);
-            //Send(ikkeh, data);
-            
         }
                 
-        public void Send(Socket handler, string data)
+        public void SendToClient(Socket handler, string data)
         {
-            //yangdilempar = data;
             // Convert the string data to byte data using ASCII encoding.
             byte[] byteData = Encoding.ASCII.GetBytes(data);
 
@@ -243,25 +251,25 @@ namespace WereWolves
             }
         }
 
-        public void receiveUdp(IAsyncResult ar)
+        /*public void ReceiveUdp(IAsyncResult ar)
         {
             UdpClient u = ((UdpState)(ar.AsyncState)).u;
             IPEndPoint e = ((UdpState)(ar.AsyncState)).e;
 
             Socket handler = tcpServer.Accept();
-            receivedString = null;
+            receivedReqs = null;
             while (true)
             {
                 data = new byte[1024];
                 int bytesRec = handler.Receive(data);
-                receivedString += Encoding.ASCII.GetString(data, 0, bytesRec);
-                if (receivedString.IndexOf("<EOF>") > -1)
+                receivedReqs += Encoding.ASCII.GetString(data, 0, bytesRec);
+                if (receivedReqs.IndexOf("<EOF>") > -1)
                 {
                     break;
                 }
             }
             Console.WriteLine("\nPress ENTER to continue...");
             Console.Read();
-        }
+        }*/
     }
 }

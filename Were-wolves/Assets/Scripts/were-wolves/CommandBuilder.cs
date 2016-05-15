@@ -5,8 +5,6 @@ namespace WereWolves
 {
     public class CommandBuilder
     {
-        public static void Main() { }
-
         private Dictionary<string, object> command;
 
         public CommandBuilder ()

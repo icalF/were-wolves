@@ -89,7 +89,7 @@ namespace WereWolves.Tests
             string lol = (server1.ipep as IPEndPoint).ToString();
             //IPEndPoint e = new IPEndPoint(IPAddress.Parse("127.0.0.1"), 8383);
             client1.setServer((server1.ipep as IPEndPoint).Address.ToString(), 8282);
-            server1.SendToClient(s);
+            server1.SendToClients(s);
             //client1.Received();
             Thread.Sleep(2000);
             string t = client1.receivedString;
